@@ -32,18 +32,18 @@ class TEamsPluginConfig extends PluginConfig {
         list ($__, $_N) = self::translate();
 
         return array(
-            'slack'                      => new SectionBreakField(array(
+            'teams'                      => new SectionBreakField(array(
                 'label' => $__('Slack notifier'),
                 'hint'  => $__('Readme first: https://github.com/ipavlovi/osTicket-Microsoft-Teams-plugin')
                     )),
-            'slack-webhook-url'          => new TextboxField(array(
+            'teams-webhook-url'          => new TextboxField(array(
                 'label'         => $__('Webhook URL'),
                 'configuration' => array(
                     'size'   => 100,
                     'length' => 200
                 ),
                     )),
-            'slack-regex-subject-ignore' => new TextboxField([
+            'teams-regex-subject-ignore' => new TextboxField([
                 'label'         => $__('Ignore when subject equals regex'),
                 'hint'          => $__('Auto delimited, always case-insensitive'),
                 'configuration' => [

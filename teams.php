@@ -10,7 +10,7 @@ require_once('config.php');
 
 class SlackPlugin extends Plugin {
 
-    var $config_class = "SlackPluginConfig";
+    var $config_class = "TeamsPluginConfig";
 
     /**
      * The entrypoint of the plugin, keep short, always runs.
@@ -33,7 +33,7 @@ class SlackPlugin extends Plugin {
     function onTicketCreated(Ticket $ticket) {
         global $cfg;
         if (!$cfg instanceof OsticketConfig) {
-            error_log("Slack plugin called too early.");
+            error_log("Teams plugin called too early.");
             return;
         }
 
@@ -90,7 +90,7 @@ class SlackPlugin extends Plugin {
                 , $ticket->getId()
                 , $ticket->getNumber()
                 , __("updated"));
-        $this->sendToSlack($ticket, $heading, $plaintext, 'warning');
+        $this->sendToTeams($ticket, $heading, $plaintext, 'warning');
     }
 
     /**
@@ -104,15 +104,15 @@ class SlackPlugin extends Plugin {
      * @param string $colour
      * @throws \Exception
      */
-    function sendToSlack(Ticket $ticket, $heading, $body, $colour = 'good') {
+    function sendToTeams(Ticket $ticket, $heading, $body, $colour = 'good') {
         global $ost, $cfg;
         if (!$ost instanceof osTicket || !$cfg instanceof OsticketConfig) {
-            error_log("Slack plugin called too early.");
+            error_log("Teams plugin called too early.");
             return;
         }
-        $url = $this->getConfig()->get('slack-webhook-url');
+        $url = $this->getConfig()->get('teams-webhook-url');
         if (!$url) {
-            $ost->logError('Slack Plugin not configured', 'You need to read the Readme and configure a webhook URL before using this.');
+            $ost->logError('Teams Plugin not configured', 'You need to read the Readme and configure a webhook URL before using this.');
         }
 
         // Check the subject, see if we want to filter it.
