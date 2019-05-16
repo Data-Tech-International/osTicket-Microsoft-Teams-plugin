@@ -38,13 +38,5 @@ Ivan Pavlovic has set up a connection to Incoming Webhook so group members will 
 ## Test!
 Create a ticket!
 
-You should see something like the following appear in your Teams channel:
-
-![slack-new-ticket](https://user-images.githubusercontent.com/5077391/31572647-923e07b0-b0f6-11e7-9515-98205d6f800f.png)
-
-When a user replies, you'll get something like:
-
-![slack-reply](https://user-images.githubusercontent.com/5077391/31572648-9279eb18-b0f6-11e7-97da-9a9c63a200d4.png)
-
 Notes, Replies from Agents and System messages shouldn't appear, usernames are links to the user's page 
 in osTicket, the Ticket subject is a link to the ticket, as is the ticket ID. 
