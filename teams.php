@@ -8,7 +8,7 @@ require_once(INCLUDE_DIR . 'class.config.php');
 require_once(INCLUDE_DIR . 'class.format.php');
 require_once('config.php');
 
-class SlackPlugin extends Plugin {
+class TeamsPlugin extends Plugin {
 
     var $config_class = "TeamsPluginConfig";
 
@@ -47,7 +47,7 @@ class SlackPlugin extends Plugin {
                 , $ticket->getId()
                 , $ticket->getNumber()
                 , __("created"));
-        $this->sendToSlack($ticket, $heading, $plaintext);
+        $this->sendToTeams($ticket, $heading, $plaintext);
     }
 
     /**
@@ -94,7 +94,7 @@ class SlackPlugin extends Plugin {
     }
 
     /**
-     * A helper function that sends messages to slack endpoints. 
+     * A helper function that sends messages to teams endpoints. 
      * 
      * @global osTicket $ost
      * @global OsticketConfig $cfg
@@ -116,10 +116,10 @@ class SlackPlugin extends Plugin {
         }
 
         // Check the subject, see if we want to filter it.
-        $regex_subject_ignore = $this->getConfig()->get('slack-regex-subject-ignore');
+        $regex_subject_ignore = $this->getConfig()->get('teams-regex-subject-ignore');
         // Filter on subject, and validate regex:
         if ($regex_subject_ignore && preg_match("/$regex_subject_ignore/i", $ticket->getSubject())) {
-            $ost->logDebug('Ignored Message', 'Slack notification was not sent because the subject (' . $ticket->getSubject() . ') matched regex (' . htmlspecialchars($regex_subject_ignore) . ').');
+            $ost->logDebug('Ignored Message', 'Teams notification was not sent because the subject (' . $ticket->getSubject() . ') matched regex (' . htmlspecialchars($regex_subject_ignore) . ').');
             return;
         } else {
             error_log("$ticket_subject didn't trigger $regex_subject_ignore");
@@ -178,7 +178,7 @@ class SlackPlugin extends Plugin {
                 'Content-Length: ' . strlen($data_string))
             );
 
-            // Actually send the payload to slack:
+            // Actually send the payload to Teams:
             if (curl_exec($ch) === false) {
                 throw new \Exception($url . ' - ' . curl_error($ch));
             } else {
@@ -191,8 +191,8 @@ class SlackPlugin extends Plugin {
                 }
             }
         } catch (\Exception $e) {
-            $ost->logError('Slack posting issue!', $e->getMessage(), true);
-            error_log('Error posting to Slack. ' . $e->getMessage());
+            $ost->logError('Teams posting issue!', $e->getMessage(), true);
+            error_log('Error posting to Teams. ' . $e->getMessage());
         } finally {
             curl_close($ch);
         }
@@ -219,8 +219,8 @@ class SlackPlugin extends Plugin {
 
     /**
      * Formats text according to the 
-     * formatting rules:https://api.slack.com/docs/message-formatting
-     * 
+     * formatting rules:https://docs.microsoft.com/en-us/outlook/actionable-messages/adaptive-card
+	 * 
      * @param string $text
      * @return string
      */
