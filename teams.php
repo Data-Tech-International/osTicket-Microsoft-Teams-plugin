@@ -229,7 +229,7 @@ class TeamsPlugin extends Plugin {
             'title' => $this->format_text($type . $ticket->getSubject()),
             'sections' => [
                 [
-                    'activityTitle' => ($ticket->getName() ? $ticket->getName() : 'Guest ') . ' (someone at ' . $ticket->getEmail() . ')',
+                    'activityTitle' => ($ticket->getName() ? $ticket->getName() : 'Guest ') . ' (sent by ' . $ticket->getEmail() . ')',
                     'activitySubtitle' => $ticket->getUpdateDate(),
                     'activityImage' => $this->get_gravatar($ticket->getEmail()),
                 ],
@@ -241,7 +241,7 @@ class TeamsPlugin extends Plugin {
                     'targets' => [
                         [
                             'os' => 'default',
-                            'uri' => $cfg->getUrl() . 'scp/tickets.php?id=' . $ticket->getId(),
+                            'uri' => $cfg->getUrl() . '/scp/tickets.php?id=' . $ticket->getId(),
                         ]
                     ]
                 ]
