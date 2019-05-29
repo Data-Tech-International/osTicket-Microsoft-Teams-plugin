@@ -23,41 +23,32 @@ class TeamsPlugin extends Plugin {
         // Tasks? Signal::connect('task.created',array($this,'onTaskCreated'));
     }
 
+
     /**
-     * What to do with a new Ticket?
-     * 
-     * @global OsticketConfig $cfg
+     * @global $cfg
      * @param Ticket $ticket
-     * @return type
+     * @throws Exception
      */
     function onTicketCreated(Ticket $ticket) {
         global $cfg;
+        $type = 'Issue created: ';
         if (!$cfg instanceof OsticketConfig) {
             error_log("Teams plugin called too early.");
             return;
         }
 
-        // Convert any HTML in the message into text
-        $plaintext = Format::html2text($ticket->getMessages()[0]->getBody()->getClean());
-
-        // Format the messages we'll send.
-        $heading = sprintf('%s CONTROLSTART%sscp/tickets.php?id=%d|#%sCONTROLEND %s'
-                , __("New Ticket")
-                , $cfg->getUrl()
-                , $ticket->getId()
-                , $ticket->getNumber()
-                , __("created"));
-        $this->sendToTeams($ticket, $heading, $plaintext);
+        $this->sendToTeams($ticket, $type);
     }
 
     /**
      * What to do with an Updated Ticket?
-     * 
+     *
      * @global OsticketConfig $cfg
      * @param ThreadEntry $entry
      * @return type
      */
     function onTicketUpdated(ThreadEntry $entry) {
+        $type = 'Issue Updated: ';
         global $cfg;
         if (!$cfg instanceof OsticketConfig) {
             error_log("Slack plugin called too early.");
@@ -80,22 +71,13 @@ class TeamsPlugin extends Plugin {
         if ($entry->getId() == $first_entry->getId()) {
             return;
         }
-        // Convert any HTML in the message into text
-        $plaintext = Format::html2text($entry->getBody()->getClean());
 
-        // Format the messages we'll send
-        $heading = sprintf('%s CONTROLSTART%sscp/tickets.php?id=%d|#%sCONTROLEND %s'
-                , __("Ticket")
-                , $cfg->getUrl()
-                , $ticket->getId()
-                , $ticket->getNumber()
-                , __("updated"));
-        $this->sendToTeams($ticket, $heading, $plaintext, 'warning');
+        $this->sendToTeams($ticket, $type, 'warning');
     }
 
     /**
-     * A helper function that sends messages to teams endpoints. 
-     * 
+     * A helper function that sends messages to teams endpoints.
+     *
      * @global osTicket $ost
      * @global OsticketConfig $cfg
      * @param Ticket $ticket
@@ -104,7 +86,7 @@ class TeamsPlugin extends Plugin {
      * @param string $colour
      * @throws \Exception
      */
-    function sendToTeams(Ticket $ticket, $heading, $body, $colour = 'good') {
+    function sendToTeams(Ticket $ticket, $type, $colour = 'good') {
         global $ost, $cfg;
         if (!$ost instanceof osTicket || !$cfg instanceof OsticketConfig) {
             error_log("Teams plugin called too early.");
@@ -125,57 +107,18 @@ class TeamsPlugin extends Plugin {
             error_log("$ticket_subject didn't trigger $regex_subject_ignore");
         }
 
-        $heading = $this->format_text($heading);
-
-        // Pull template from config, and use that. 
-        $template          = $this->getConfig()->get('message-template');
-        // Add our custom var
-        $custom_vars       = [
-            'slack_safe_message' => $this->format_text($body),
-        ];
-        $formatted_message = $ticket->replaceVars($template, $custom_vars);
-
         // Build the payload with the formatted data:
-        $payload['attachments'][0] = [
-            'pretext'     => $heading,
-            'fallback'    => $heading,
-            'color'       => $colour,
-            // 'author'      => $ticket->getOwner(),
-            //  'author_link' => $cfg->getUrl() . 'scp/users.php?id=' . $ticket->getOwnerId(),
-            // 'author_icon' => $this->get_gravatar($ticket->getEmail()),
-            'title'       => $ticket->getSubject(),
-            'title_link'  => $cfg->getUrl() . 'scp/tickets.php?id=' . $ticket->getId(),
-            'ts'          => time(),
-            'footer'      => 'via osTicket Slack Plugin',
-            'footer_icon' => 'https://platform.slack-edge.com/img/default_application_icon.png',
-            'text'        => $formatted_message,
-            'mrkdwn_in'   => ["text"]
-        ];
-        // Add a field for tasks if there are open ones
-        if ($ticket->getNumOpenTasks()) {
-            $payload['attachments'][0]['fields'][] = [
-                'title' => __('Open Tasks'),
-                'value' => $ticket->getNumOpenTasks(),
-                'short' => TRUE,
-            ];
-        }
-        // Change the colour to Fuschia if ticket is overdue
-        if ($ticket->isOverdue()) {
-            $payload['attachments'][0]['colour'] = '#ff00ff';
-        }
-
-        // Format the payload:
-        $data_string = utf8_encode(json_encode($payload));
+        $payload = $this->createJsonMessage($ticket, $type);
 
         try {
             // Setup curl
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string))
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($payload))
             );
 
             // Actually send the payload to Teams:
@@ -185,9 +128,9 @@ class TeamsPlugin extends Plugin {
                 $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 if ($statusCode != '200') {
                     throw new \Exception(
-                    'Error sending to: ' . $url
-                    . ' Http code: ' . $statusCode
-                    . ' curl-error: ' . curl_errno($ch));
+                        'Error sending to: ' . $url
+                        . ' Http code: ' . $statusCode
+                        . ' curl-error: ' . curl_errno($ch));
                 }
             }
         } catch (\Exception $e) {
@@ -201,26 +144,26 @@ class TeamsPlugin extends Plugin {
     /**
      * Fetches a ticket from a ThreadEntry
      *
-     * @param ThreadEntry $entry        	
+     * @param ThreadEntry $entry
      * @return Ticket
      */
     function getTicket(ThreadEntry $entry) {
         $ticket_id = Thread::objects()->filter([
-                    'id' => $entry->getThreadId()
-                ])->values_flat('object_id')->first() [0];
+            'id' => $entry->getThreadId()
+        ])->values_flat('object_id')->first() [0];
 
         // Force lookup rather than use cached data..
         // This ensures we get the full ticket, with all
-        // thread entries etc.. 
+        // thread entries etc..
         return Ticket::lookup(array(
-                    'ticket_id' => $ticket_id
+            'ticket_id' => $ticket_id
         ));
     }
 
     /**
-     * Formats text according to the 
+     * Formats text according to the
      * formatting rules:https://docs.microsoft.com/en-us/outlook/actionable-messages/adaptive-card
-	 * 
+     *
      * @param string $text
      * @return string
      */
@@ -263,6 +206,50 @@ class TeamsPlugin extends Plugin {
             $url .= ' />';
         }
         return $url;
+    }
+
+    /**
+     * @param $ticket
+     * @param string $color
+     * @param null $type
+     * @return false|string
+     */
+    private function createJsonMessage($ticket, $type = null, $color = 'AFAFAF')
+    {
+        global $cfg;
+        if ($ticket->isOverdue()) {
+            $color = 'ff00ff';
+        }
+        //Prepare message array to convert to json
+        $message = [
+            '@type' => 'MessageCard',
+            '@context' => 'https://schema.org/extensions',
+            'summary' => 'Ticket: ' . $ticket->getNumber(),
+            'themeColor' => $color,
+            'title' => $this->format_text($type . $ticket->getSubject()),
+            'sections' => [
+                [
+                    'activityTitle' => ($ticket->getName() ? $ticket->getName() : 'Guest ') . ' (someone at ' . $ticket->getEmail() . ')',
+                    'activitySubtitle' => $ticket->getUpdateDate(),
+                    'activityImage' => $this->get_gravatar($ticket->getEmail()),
+                ],
+            ],
+            'potentialAction' => [
+                [
+                    '@type' => 'OpenUri',
+                    'name' => 'View in osTicket',
+                    'targets' => [
+                        [
+                            'os' => 'default',
+                            'uri' => $cfg->getUrl() . 'scp/tickets.php?id=' . $ticket->getId(),
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        return json_encode($message, JSON_UNESCAPED_SLASHES);
+
     }
 
 }
