@@ -39,7 +39,7 @@ class TeamsPluginConfig extends PluginConfig {
             'teams-webhook-url'          => new TextboxField(array(
                 'label'         => $__('Webhook URL'),
                 'configuration' => array(
-                    'size'   => 300,
+                    'size'   => 100,
                     'length' => 700
                 ),
             )),
