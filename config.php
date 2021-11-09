@@ -39,8 +39,8 @@ class TeamsPluginConfig extends PluginConfig {
             'teams-webhook-url'          => new TextboxField(array(
                 'label'         => $__('Webhook URL'),
                 'configuration' => array(
-                    'size'   => 100,
-                    'length' => 500
+                    'size'   => 300,
+                    'length' => 700
                 ),
             )),
             'teams-regex-subject-ignore' => new TextboxField([
