@@ -229,7 +229,7 @@ class TeamsPlugin extends Plugin {
             '@context' => 'https://schema.org/extensions',
             'summary' => 'Ticket: ' . $ticket->getNumber(),
             'themeColor' => $color,
-            'title' => 'DEV:' . $this->format_text($type . $ticket->getSubject()),
+            'title' => 'PROD:' . $this->format_text($type . $ticket->getSubject()),
             'sections' => [
                 [
                     'activityTitle' => ($ticket->getName() ? $ticket->getName() : 'Guest ') . ' (sent by ' . $ticket->getEmail() . ')',
@@ -240,7 +240,7 @@ class TeamsPlugin extends Plugin {
             'potentialAction' => [
                 [
                     '@type' => 'OpenUri',
-                    'name' => 'View in DEV osTicket',
+                    'name' => 'View in PROD osTicket',
                     'targets' => [
                         [
                             'os' => 'default',
