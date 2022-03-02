@@ -114,6 +114,9 @@ class TeamsPlugin extends Plugin {
             // Setup curl
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+			// The following addition is necessary if SSL certs are invalid on this box (DEV box)
+			// 'SSL certificate problem: unable to get local issuer certificate'
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, "false");
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
@@ -226,7 +229,7 @@ class TeamsPlugin extends Plugin {
             '@context' => 'https://schema.org/extensions',
             'summary' => 'Ticket: ' . $ticket->getNumber(),
             'themeColor' => $color,
-            'title' => $this->format_text($type . $ticket->getSubject()),
+            'title' => 'PROD:' . $this->format_text($type . $ticket->getSubject()),
             'sections' => [
                 [
                     'activityTitle' => ($ticket->getName() ? $ticket->getName() : 'Guest ') . ' (sent by ' . $ticket->getEmail() . ')',
@@ -237,7 +240,7 @@ class TeamsPlugin extends Plugin {
             'potentialAction' => [
                 [
                     '@type' => 'OpenUri',
-                    'name' => 'View in osTicket',
+                    'name' => 'View in PROD osTicket',
                     'targets' => [
                         [
                             'os' => 'default',
@@ -248,11 +251,18 @@ class TeamsPlugin extends Plugin {
             ]
         ];
         if($this->getConfig()->get('teams-message-display')) {
-            array_push($message['sections'], ['text' => $ticket->getMessages()[0]->getBody()->getClean()]);
+			$msgArray = $ticket->getMessages();
+			$FirstMessage = $msgArray[0];
+			$LastMessage = $msgArray[count($msgArray)-1];
+			$msgText = $LastMessage;
+			// get the LAST/most recent message that went in, don't just repeat the first one.
+			if($msgText == null)
+			{
+				$msgText = $FirstMessage;
+			}
+			array_push($message['sections'], ['text' => $msgText->getBody()->getClean()]);
         }
 
         return json_encode($message, JSON_UNESCAPED_SLASHES);
-
-    }
-
-}
+    } // end func
+}// end class
