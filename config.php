@@ -51,6 +51,14 @@ class TeamsPluginConfig extends PluginConfig {
                     'length' => 200
                 ],
             ]),
+			'teams-csv-departmentid' => new TextboxField([
+				'label'         => $__('Ignore department ids'),
+				'hint'          => $__('Comma delimited, ints'),
+				'configuration' => [
+					'size'   => 30,
+					'length' => 200
+				],
+			]),
             'teams-message-display' => new BooleanField([
                 'label' => $__('Display ticket message body in notification.'),
                 'hint' => $__('Uncheck to hide messages.'),

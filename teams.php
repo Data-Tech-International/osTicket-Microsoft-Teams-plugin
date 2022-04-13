@@ -107,7 +107,18 @@ class TeamsPlugin extends Plugin {
             error_log("$ticket_subject didn't trigger $regex_subject_ignore");
         }
 
-        // Build the payload with the formatted data:
+		// Check the department id,  see if we want to filter it
+		$teams_csv_departmentid = explode(',',$this->getConfig()->get('teams-csv-departmentid'));
+		if(in_array($ticket->getDeptId(),$teams_csv_departmentid)){
+			$ost->logDebug('Ignored Message', 'Teams notification was not sent because the departmentID (' . $ticket->getDeptId() . ') matched (' . json_encode($teams_csv_departmentid) . ').');
+			return;
+		}
+		else{
+			error_log('DepartmentID: '.$ticket->getDeptId() ." didn't trigger ".json_encode($teams_csv_departmentid));
+		}
+
+
+		// Build the payload with the formatted data:
         $payload = $this->createJsonMessage($ticket, $type);
 
         try {
