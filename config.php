@@ -20,7 +20,7 @@ class TeamsPluginConfig extends PluginConfig {
         return Plugin::translate('teams');
     }
 
-    function pre_save($config, &$errors) {
+    function pre_save(&$config, &$errors) {
         if ($config['slack-regex-subject-ignore'] && false === @preg_match("/{$config['slack-regex-subject-ignore']}/i", null)) {
             $errors['err'] = 'Your regex was invalid, try something like "spam", it will become: "/spam/i" when we use it.';
             return FALSE;
@@ -33,7 +33,7 @@ class TeamsPluginConfig extends PluginConfig {
 
         return array(
             'teams'                      => new SectionBreakField(array(
-                'label' => $__('Slack notifier'),
+                'label' => $__('Teams notifier'),
                 'hint'  => $__('Readme first: https://github.com/ipavlovi/osTicket-Microsoft-Teams-plugin')
             )),
             'teams-webhook-url'          => new TextboxField(array(
@@ -51,6 +51,14 @@ class TeamsPluginConfig extends PluginConfig {
                     'length' => 200
                 ],
             ]),
+			'teams-csv-departmentid' => new TextboxField([
+				'label'         => $__('Ignore department ids'),
+				'hint'          => $__('Comma delimited, ints'),
+				'configuration' => [
+					'size'   => 30,
+					'length' => 200
+				],
+			]),
             'teams-message-display' => new BooleanField([
                 'label' => $__('Display ticket message body in notification.'),
                 'hint' => $__('Uncheck to hide messages.'),
