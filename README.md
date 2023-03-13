@@ -8,7 +8,8 @@ Originally forked from: [https://github.com/clonemeagain/osticket-slack](https:/
 
 Info
 ------
-This plugin uses CURL and was designed/tested with osTicket-1.10.1
+This plugin uses CURL and was designed/tested with osTicket-1.10.1 and updated for use with osTicket-1.17.2
+**Note** This has also been updated to fix the first message being repeated for each notification. It should now show new messages as they come in.
 
 ## Requirements
 - php_curl
